@@ -1,0 +1,360 @@
+{
+  "_source": "Real answers of YOURLS 1.10.6 (official Docker image, MariaDB 11), 30/10/2026; IP anonymized, signature removed.",
+  "bad_password": {
+    "status": 403,
+    "body": {
+      "message": "Invalid username or password",
+      "errorCode": "403",
+      "callback": ""
+    }
+  },
+  "bad_signature": {
+    "status": 403,
+    "body": {
+      "message": "Please log in",
+      "errorCode": "403",
+      "callback": ""
+    }
+  },
+  "db_stats": {
+    "status": 200,
+    "body": {
+      "db-stats": {
+        "total_links": 7,
+        "total_clicks": 8
+      },
+      "statusCode": "200",
+      "message": "success"
+    }
+  },
+  "empty_db_stats": {
+    "status": 200,
+    "body": {
+      "db-stats": {
+        "total_links": 3,
+        "total_clicks": 0
+      },
+      "statusCode": "200",
+      "message": "success"
+    }
+  },
+  "empty_stats_top": {
+    "status": 200,
+    "body": {
+      "links": {
+        "link_1": {
+          "shorturl": "http://sho.rt/ozh",
+          "url": "https://ozh.org/",
+          "title": "ozh.org",
+          "timestamp": "2026-10-30 01:49:43",
+          "ip": "192.0.2.4",
+          "clicks": 0
+        },
+        "link_2": {
+          "shorturl": "http://sho.rt/yourls",
+          "url": "https://yourls.org/",
+          "title": "YOURLS: Your Own URL Shortener",
+          "timestamp": "2026-10-30 01:49:43",
+          "ip": "192.0.2.4",
+          "clicks": 0
+        },
+        "link_3": {
+          "shorturl": "http://sho.rt/yourlsblog",
+          "url": "https://blog.yourls.org/",
+          "title": "YOURLS' Blog",
+          "timestamp": "2026-10-30 01:49:43",
+          "ip": "192.0.2.4",
+          "clicks": 0
+        }
+      },
+      "stats": {
+        "total_links": 3,
+        "total_clicks": 0
+      },
+      "statusCode": "200",
+      "message": "success"
+    }
+  },
+  "expand": {
+    "status": 200,
+    "body": {
+      "keyword": "news",
+      "shorturl": "http://sho.rt/news",
+      "longurl": "https://www.example.org/newsletter",
+      "title": "Example Domain",
+      "message": "success",
+      "statusCode": "200"
+    }
+  },
+  "get_signature": {
+    "status": 200,
+    "body": {
+      "db-stats": {
+        "total_links": 7,
+        "total_clicks": 8
+      },
+      "statusCode": "200",
+      "message": "success"
+    }
+  },
+  "no_auth": {
+    "status": 403,
+    "body": {
+      "message": "Please log in",
+      "errorCode": "403",
+      "callback": ""
+    }
+  },
+  "not_yourls": {
+    "status": 403,
+    "body": "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\" \"http://www.w3.org/TR/html4/strict.dtd\">\n<html><head>\n<title>403 Forbidden</title>\n</head><body>\n<h1>Forbidden</h1>\n<p>You don't have permission to access this resource.</p>\n<hr>\n<address>Apache/2.4.69 (Debian) Server at sho.rt Port 8080</address>\n</body></html>"
+  },
+  "password_ok": {
+    "status": 200,
+    "body": {
+      "db-stats": {
+        "total_links": 3,
+        "total_clicks": 0
+      },
+      "statusCode": "200",
+      "message": "success"
+    }
+  },
+  "shorturl_bad_url": {
+    "status": 200,
+    "body": {
+      "status": "success",
+      "code": "",
+      "message": "notaurl added to database",
+      "errorCode": "",
+      "statusCode": "200",
+      "url": {
+        "keyword": "2",
+        "url": "notaurl",
+        "title": "notaurl",
+        "date": "2026-10-30 01:50:03",
+        "ip": "192.0.2.4"
+      },
+      "title": "notaurl",
+      "shorturl": "http://sho.rt/2"
+    }
+  },
+  "shorturl_keyword": {
+    "status": 200,
+    "body": {
+      "status": "success",
+      "code": "",
+      "message": "https://www.example.org/newsletter added to database",
+      "errorCode": "",
+      "statusCode": "200",
+      "url": {
+        "keyword": "news",
+        "url": "https://www.example.org/newsletter",
+        "title": "Example Domain",
+        "date": "2026-10-30 01:50:03",
+        "ip": "192.0.2.4"
+      },
+      "title": "Example Domain",
+      "shorturl": "http://sho.rt/news"
+    }
+  },
+  "shorturl_keyword_taken": {
+    "status": 400,
+    "body": {
+      "status": "fail",
+      "code": "error:keyword",
+      "message": "Short URL news already exists in database or is reserved",
+      "errorCode": "400",
+      "statusCode": "400"
+    }
+  },
+  "shorturl_new": {
+    "status": 200,
+    "body": {
+      "status": "success",
+      "code": "",
+      "message": "https://www.example.com/blog/post-1 added to database",
+      "errorCode": "",
+      "statusCode": "200",
+      "url": {
+        "keyword": "1",
+        "url": "https://www.example.com/blog/post-1",
+        "title": "My blog",
+        "date": "2026-10-30 01:50:02",
+        "ip": "192.0.2.4"
+      },
+      "title": "My blog",
+      "shorturl": "http://sho.rt/1"
+    }
+  },
+  "shorturl_no_url": {
+    "status": 400,
+    "body": {
+      "status": "fail",
+      "code": "error:nourl",
+      "message": "Missing or malformed URL",
+      "errorCode": "400",
+      "statusCode": "400"
+    }
+  },
+  "shorturl_same_url": {
+    "status": 409,
+    "body": {
+      "status": "fail",
+      "code": "error:url",
+      "message": "https://www.example.org/newsletter already exists in database (short URL: sho.rt/news)",
+      "errorCode": "409",
+      "statusCode": "409",
+      "url": {
+        "keyword": "news",
+        "url": "https://www.example.org/newsletter",
+        "title": "Example Domain",
+        "date": "2026-10-30 01:50:03",
+        "ip": "192.0.2.4",
+        "clicks": 0
+      },
+      "title": "Example Domain",
+      "shorturl": "http://sho.rt/news"
+    }
+  },
+  "stats_top": {
+    "status": 200,
+    "body": {
+      "links": {
+        "link_1": {
+          "shorturl": "http://sho.rt/news",
+          "url": "https://www.example.org/newsletter",
+          "title": "Example Domain",
+          "timestamp": "2026-10-30 01:50:03",
+          "ip": "192.0.2.4",
+          "clicks": 5
+        },
+        "link_2": {
+          "shorturl": "http://sho.rt/docs",
+          "url": "https://www.example.com/docs",
+          "title": "Example Domain",
+          "timestamp": "2026-10-30 01:50:03",
+          "ip": "192.0.2.4",
+          "clicks": 2
+        },
+        "link_3": {
+          "shorturl": "http://sho.rt/1",
+          "url": "https://www.example.com/blog/post-1",
+          "title": "My blog",
+          "timestamp": "2026-10-30 01:50:02",
+          "ip": "192.0.2.4",
+          "clicks": 1
+        },
+        "link_4": {
+          "shorturl": "http://sho.rt/2",
+          "url": "notaurl",
+          "title": "notaurl",
+          "timestamp": "2026-10-30 01:50:03",
+          "ip": "192.0.2.4",
+          "clicks": 0
+        },
+        "link_5": {
+          "shorturl": "http://sho.rt/ozh",
+          "url": "https://ozh.org/",
+          "title": "ozh.org",
+          "timestamp": "2026-10-30 01:49:43",
+          "ip": "192.0.2.4",
+          "clicks": 0
+        },
+        "link_6": {
+          "shorturl": "http://sho.rt/yourls",
+          "url": "https://yourls.org/",
+          "title": "YOURLS: Your Own URL Shortener",
+          "timestamp": "2026-10-30 01:49:43",
+          "ip": "192.0.2.4",
+          "clicks": 0
+        },
+        "link_7": {
+          "shorturl": "http://sho.rt/yourlsblog",
+          "url": "https://blog.yourls.org/",
+          "title": "YOURLS' Blog",
+          "timestamp": "2026-10-30 01:49:43",
+          "ip": "192.0.2.4",
+          "clicks": 0
+        }
+      },
+      "stats": {
+        "total_links": 7,
+        "total_clicks": 8
+      },
+      "statusCode": "200",
+      "message": "success"
+    }
+  },
+  "stats_top1": {
+    "status": 200,
+    "body": {
+      "links": {
+        "link_1": {
+          "shorturl": "http://sho.rt/news",
+          "url": "https://www.example.org/newsletter",
+          "title": "Example Domain",
+          "timestamp": "2026-10-30 01:50:03",
+          "ip": "192.0.2.4",
+          "clicks": 5
+        }
+      },
+      "stats": {
+        "total_links": 7,
+        "total_clicks": 8
+      },
+      "statusCode": "200",
+      "message": "success"
+    }
+  },
+  "unknown_action": {
+    "status": 400,
+    "body": {
+      "errorCode": "400",
+      "message": "Unknown or missing \"action\" parameter"
+    }
+  },
+  "url_stats": {
+    "status": 200,
+    "body": {
+      "statusCode": "200",
+      "message": "success",
+      "link": {
+        "shorturl": "http://sho.rt/news",
+        "url": "https://www.example.org/newsletter",
+        "title": "Example Domain",
+        "timestamp": "2026-10-30 01:50:03",
+        "ip": "192.0.2.4",
+        "clicks": 5
+      }
+    }
+  },
+  "url_stats_full": {
+    "status": 200,
+    "body": {
+      "statusCode": "200",
+      "message": "success",
+      "link": {
+        "shorturl": "http://sho.rt/docs",
+        "url": "https://www.example.com/docs",
+        "title": "Example Domain",
+        "timestamp": "2026-10-30 01:50:03",
+        "ip": "192.0.2.4",
+        "clicks": 2
+      }
+    }
+  },
+  "url_stats_missing": {
+    "status": 404,
+    "body": {
+      "statusCode": "404",
+      "message": "Error: short URL not found"
+    }
+  },
+  "version": {
+    "status": 200,
+    "body": {
+      "version": "1.10.6"
+    }
+  }
+}

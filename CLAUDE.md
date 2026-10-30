@@ -31,16 +31,20 @@ pushing.
 ## Architecture
 
 ```
-index.js                          SDK wiring only: handlers registered before connect()
-src/devices/index.js              registry of the device blueprints + dispatch helpers
-src/devices/<type>.js             one device type per file (buildDevice, onPoll, onSetValue...)
-src/scenes.js                     scene action handlers (manifest `scene_actions`)
-src/widgets.js                    dashboard widget handlers (manifest `widgets`)
+index.js                          SDK wiring only: src/app.js registers the handlers before connect()
+src/app.js                        every SDK handler -> the hub (also used by the tests)
+src/hub.js                        reading timer, states, click milestones -> scene events, views
+src/devices.js                    the instance device: features, names, values
+src/yourls/client.js              YOURLS API (yourls-api.php, POST, JSON); errors by kind
+src/scenes.js                     scene actions shorten_url, get_link_clicks (manifest `scene_actions`)
+src/widgets.js                    dashboard widget `yourls_top_links` (manifest `widgets`)
+src/texts.js                      connection, error, report and action texts (4 languages)
 src/config.js                     DEFAULT_CONFIG (mirrors the manifest defaults) + normalization
-src/weather.js                    example driver (Open-Meteo)
+src/store.js, src/problems.js     /data/yourls-state.json; one log line per repeated failure
 gladys-assistant-integration.json manifest: name, config_schema, actions, image...
-docs/en.md, docs/fr.md            user documentation, re-hosted by Gladys (mandatory)
+docs/{en,fr,de,es}.md             user documentation, re-hosted by Gladys (en and fr mandatory)
 test/                             node --test, against the SDK's fake Gladys (integration-sdk/testing)
+                                  and helpers/fakeYourls.js (shaped on test/fixtures/yourls)
 .github/scripts/release.mjs       release helpers (manifest bump, changelog), tested in test/
 ```
 
@@ -70,8 +74,9 @@ test/                             node --test, against the SDK's fake Gladys (in
   `type: "provider"`: 5.1.0). `test/manifest.test.js` ties the manifest to the
   code (defaults, action, scene and widget handlers): change both sides
   together.
-- **User-facing text** is bilingual (English and French): action messages,
-  manifest texts, and `docs/en.md` / `docs/fr.md`, kept in sync.
+- **User-facing text** is in four languages (English, French, German with
+  "du", Spanish with "usted"): action messages, widget, manifest texts, and
+  `docs/{en,fr,de,es}.md` with the same sections. `test/i18n.test.js` checks.
 - **Style.** Prettier formats, ESLint catches mistakes. Comments explain why,
   in English. Tests never touch the network.
 
@@ -214,6 +219,31 @@ code de ce dépôt. Compléter ce fichier quand un nouveau piège est découvert
 - Les filtres de scène ne font qu'égalité et appartenance : un seuil reste le travail d'un capteur.
 - **Les clés de widgets, de déclencheurs et d'actions sont figées une fois publiées.**
 - `gladys_version` `>=5.1.0` dès qu'il y a widgets, déclencheurs ou actions de scène.
+
+## YOURLS (propre à ce dépôt)
+
+- **API** vérifiée sur YOURLS **1.10.6** (image officielle `yourls`, MariaDB 11, 30/10/2026) :
+  `yourls-api.php`, `format=json`, authentification par `signature=<jeton>` (page Outils de l'admin ;
+  `yourls_auth_signature()`, dépend de `YOURLS_COOKIEKEY`) ou `username`/`password`. Tout part en
+  **POST** (le cœur de YOURLS lit `$_REQUEST`) : le secret n'apparaît dans aucune adresse.
+- `action=stats&filter=top&limit=N` rend les totaux de la base (`stats.total_links`,
+  `stats.total_clicks`) **et** le top (`links.link_1…`) : une seule requête par cycle, plus
+  `action=url-stats&shorturl=<mot-clé>` par lien suivi. `db-stats` est donc inutile.
+- Depuis 1.9 les compteurs sont des nombres, mais `statusCode`/`errorCode` des **chaînes** (`"200"`) ;
+  avant, tout en chaînes : `count()` accepte les deux.
+- Refus d'authentification : HTTP 403 JSON `{"message":"Please log in","errorCode":"403"}` (ou
+  `Invalid username or password`). Une page HTML 403 d'Apache n'est **pas** un refus de jeton
+  (« pas l'API YOURLS »). Mot-clé inconnu : 404 JSON `Error: short URL not found`.
+- `shorturl` : succès 200 `status: success` ; adresse déjà connue 409 `code: error:url` **avec** le
+  lien existant (`shorturl`, `url.keyword`) ; mot-clé pris 400 `error:keyword` ; sans adresse 400
+  `error:nourl`. **YOURLS accepte « notaurl » comme adresse** : l'action de scène exige `http(s)://`.
+- `action=version` rend `{"version":"1.10.6"}` sans `statusCode`.
+- L'image officielle écoute sur **8080** (pas 80), et `YOURLS_SITE` doit porter le port ; installer
+  par `POST admin/install.php` avec `install=1`. Depuis l'hôte, l'IP du conteneur n'était pas
+  joignable : tester depuis un conteneur du même réseau.
+- Le déclencheur « Palier de clics » remplace un seuil (que les filtres de scène ne savent pas faire)
+  par une **échelle fixe** 10, 25, 50, 100… 1 000 000 en filtre `select` : un palier par événement,
+  tous ceux franchis entre deux lectures, mémorisés dans `/data` par mot-clé.
 
 ## Store
 
