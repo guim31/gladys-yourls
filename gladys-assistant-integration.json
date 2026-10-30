@@ -1,177 +1,792 @@
 {
   "manifest_version": 1,
   "type": "device",
-  "name": "Demo Devices Template",
+  "name": "YOURLS",
   "description": {
-    "en": "Starter template showing sensors, a switch, a dimmable light and a smart plug.",
-    "fr": "Template de démarrage : capteurs, interrupteur, lampe variable et prise connectée."
+    "en": "Clicks of your YOURLS short links in Gladys: milestones in scenes, and shorten links from a scene.",
+    "fr": "Les clics de vos liens courts YOURLS dans Gladys : paliers en scène, et liens raccourcis par scène.",
+    "de": "Klicks deiner YOURLS-Kurzlinks in Gladys: Meilensteine in Szenen, Links per Szene kürzen.",
+    "es": "Clics de sus enlaces cortos de YOURLS en Gladys: hitos en escenas, y enlaces acortados por escena."
   },
   "version": "1.0.0",
-  "docker_image": "ghcr.io/gladysassistant/integration-template-js:1.0.0",
+  "docker_image": "ghcr.io/guim31/gladys-yourls:1.0.0",
   "gladys_version": ">=5.1.0",
-  "cover_image": "https://raw.githubusercontent.com/GladysAssistant/integration-template-js/master/cover.png",
-  "categories": ["lighting", "security", "environment"],
+  "cover_image": "https://raw.githubusercontent.com/guim31/gladys-yourls/main/cover.png",
+  "categories": ["network", "servers"],
   "transports": ["local", "cloud"],
   "config_schema": [
     {
       "key": "intro",
       "type": "section",
-      "label": { "en": "Getting started", "fr": "Pour commencer" },
+      "label": {
+        "en": "Your YOURLS",
+        "fr": "Votre YOURLS",
+        "de": "Dein YOURLS",
+        "es": "Su YOURLS"
+      },
       "description": {
-        "en": "The demo weather station reads real data from the free Open-Meteo API: pick the coordinates to observe. No account, no API key.",
-        "fr": "La station météo de démonstration lit de vraies données via l'API gratuite Open-Meteo : choisissez les coordonnées à observer. Pas de compte, pas de clé d'API."
+        "en": "The address of your YOURLS (the one of the short links) and its signature token, on the Tools page of the YOURLS admin. Then add the device from the Discover tab.",
+        "fr": "L'adresse de votre YOURLS (celle des liens courts) et son jeton de signature, sur la page Outils de l'admin de YOURLS. Ajoutez ensuite l'appareil depuis l'onglet Découverte.",
+        "de": "Die Adresse deines YOURLS (die der Kurzlinks) und sein Signatur-Token, auf der Seite Werkzeuge der YOURLS-Verwaltung. Lege dann das Gerät im Tab „Entdecken“ an.",
+        "es": "La dirección de su YOURLS (la de los enlaces cortos) y su token de firma, en la página Herramientas de la administración de YOURLS. Después añada el dispositivo desde la pestaña Descubrir."
       },
       "links": [
         {
-          "url": "https://open-meteo.com/en/docs",
-          "label": { "en": "Open-Meteo documentation", "fr": "Documentation Open-Meteo" }
+          "url": "https://github.com/guim31/gladys-yourls/blob/main/docs/en.md",
+          "label": {
+            "en": "Setup guide",
+            "fr": "Guide d'installation",
+            "de": "Einrichtungsanleitung",
+            "es": "Guía de instalación"
+          }
+        },
+        {
+          "url": "https://yourls.org/docs/guide/advanced/passwordless-api",
+          "label": {
+            "en": "YOURLS signature token",
+            "fr": "Jeton de signature YOURLS",
+            "de": "YOURLS-Signatur-Token",
+            "es": "Token de firma de YOURLS"
+          }
         }
       ]
     },
     {
-      "key": "latitude",
-      "type": "number",
-      "label": { "en": "Latitude", "fr": "Latitude" },
-      "description": {
-        "en": "Latitude used for the demo weather sensor.",
-        "fr": "Latitude utilisée par le capteur météo de démonstration."
+      "key": "url",
+      "type": "string",
+      "label": {
+        "en": "YOURLS address",
+        "fr": "Adresse de YOURLS",
+        "de": "YOURLS-Adresse",
+        "es": "Dirección de YOURLS"
       },
-      "placeholder": { "en": "e.g. 48.8566", "fr": "ex. 48.8566" },
+      "description": {
+        "en": "The address of your YOURLS, the one the short links use (with its sub-directory, if any).",
+        "fr": "L'adresse de votre YOURLS, celle qu'utilisent les liens courts (avec son sous-dossier, s'il y en a un).",
+        "de": "Die Adresse deines YOURLS, die deine Kurzlinks nutzen (mit Unterverzeichnis, falls vorhanden).",
+        "es": "La dirección de su YOURLS, la que usan los enlaces cortos (con su subdirectorio, si lo hay)."
+      },
+      "placeholder": {
+        "en": "e.g. https://sho.rt",
+        "fr": "ex. https://sho.rt",
+        "de": "z. B. https://sho.rt",
+        "es": "p. ej. https://sho.rt"
+      },
       "required": true,
-      "default": 48.8566,
-      "min": -90,
-      "max": 90
+      "default": ""
     },
     {
-      "key": "longitude",
-      "type": "number",
-      "label": { "en": "Longitude", "fr": "Longitude" },
-      "description": {
-        "en": "Longitude used for the demo weather sensor.",
-        "fr": "Longitude utilisée par le capteur météo de démonstration."
+      "key": "signature",
+      "type": "secret",
+      "label": {
+        "en": "Signature token",
+        "fr": "Jeton de signature",
+        "de": "Signatur-Token",
+        "es": "Token de firma"
       },
-      "placeholder": { "en": "e.g. 2.3522", "fr": "ex. 2.3522" },
-      "required": true,
-      "default": 2.3522,
-      "min": -180,
-      "max": 180
+      "description": {
+        "en": "Shown on the Tools page of the YOURLS admin. Leave empty to use a username and password instead.",
+        "fr": "Affiché sur la page Outils de l'admin de YOURLS. Laissez vide pour utiliser plutôt un nom d'utilisateur et un mot de passe.",
+        "de": "Steht auf der Seite Werkzeuge der YOURLS-Verwaltung. Lass es leer, um stattdessen Benutzername und Passwort zu nutzen.",
+        "es": "Aparece en la página Herramientas de la administración de YOURLS. Déjelo vacío para usar en su lugar un usuario y una contraseña."
+      },
+      "required": false
     },
     {
-      "key": "unit",
-      "type": "select",
-      "label": { "en": "Temperature unit", "fr": "Unité de température" },
+      "key": "username",
+      "type": "string",
+      "label": {
+        "en": "Username (without token)",
+        "fr": "Nom d'utilisateur (sans jeton)",
+        "de": "Benutzername (ohne Token)",
+        "es": "Usuario (sin token)"
+      },
+      "description": {
+        "en": "Only without a signature token: a user of the YOURLS admin.",
+        "fr": "Seulement sans jeton de signature : un utilisateur de l'admin de YOURLS.",
+        "de": "Nur ohne Signatur-Token: ein Benutzer der YOURLS-Verwaltung.",
+        "es": "Solo sin token de firma: un usuario de la administración de YOURLS."
+      },
       "required": false,
-      "default": "celsius",
+      "default": ""
+    },
+    {
+      "key": "password",
+      "type": "secret",
+      "label": {
+        "en": "Password (without token)",
+        "fr": "Mot de passe (sans jeton)",
+        "de": "Passwort (ohne Token)",
+        "es": "Contraseña (sin token)"
+      },
+      "required": false
+    },
+    {
+      "key": "options",
+      "type": "section",
+      "label": {
+        "en": "Options",
+        "fr": "Options",
+        "de": "Optionen",
+        "es": "Opciones"
+      }
+    },
+    {
+      "key": "keywords",
+      "type": "string",
+      "label": {
+        "en": "Links to follow",
+        "fr": "Liens à suivre",
+        "de": "Zu verfolgende Links",
+        "es": "Enlaces a seguir"
+      },
+      "description": {
+        "en": "Keywords of the short links whose clicks become a feature and fire \"Click milestone\", separated by commas (10 at most).",
+        "fr": "Mots-clés des liens courts dont les clics deviennent une fonctionnalité et déclenchent « Palier de clics », séparés par des virgules (10 au plus).",
+        "de": "Schlüsselwörter der Kurzlinks, deren Klicks eine Funktion werden und „Klick-Meilenstein“ auslösen, durch Kommas getrennt (höchstens 10).",
+        "es": "Palabras clave de los enlaces cortos cuyos clics se convierten en una función y activan «Hito de clics», separadas por comas (10 como máximo)."
+      },
+      "placeholder": {
+        "en": "e.g. news, menu",
+        "fr": "ex. news, menu",
+        "de": "z. B. news, menu",
+        "es": "p. ej. news, menu"
+      },
+      "required": false,
+      "default": ""
+    },
+    {
+      "key": "poll_interval",
+      "type": "select",
+      "label": {
+        "en": "Refresh interval",
+        "fr": "Intervalle de rafraîchissement",
+        "de": "Aktualisierungsintervall",
+        "es": "Intervalo de actualización"
+      },
+      "description": {
+        "en": "How often YOURLS is read: one API request, and one per followed link.",
+        "fr": "À quelle fréquence YOURLS est lu : une requête d'API, et une par lien suivi.",
+        "de": "Wie oft YOURLS gelesen wird: eine API-Anfrage, und eine pro verfolgtem Link.",
+        "es": "Con qué frecuencia se lee YOURLS: una petición de API, y una por enlace seguido."
+      },
+      "required": false,
+      "default": "300",
       "options": [
-        { "value": "celsius", "label": { "en": "Celsius", "fr": "Celsius" } },
-        { "value": "fahrenheit", "label": { "en": "Fahrenheit", "fr": "Fahrenheit" } }
+        {
+          "value": "60",
+          "label": {
+            "en": "1 minute",
+            "fr": "1 minute",
+            "de": "1 Minute",
+            "es": "1 minuto"
+          }
+        },
+        {
+          "value": "300",
+          "label": {
+            "en": "5 minutes",
+            "fr": "5 minutes",
+            "de": "5 Minuten",
+            "es": "5 minutos"
+          }
+        },
+        {
+          "value": "900",
+          "label": {
+            "en": "15 minutes",
+            "fr": "15 minutes",
+            "de": "15 Minuten",
+            "es": "15 minutos"
+          }
+        }
       ]
     },
     {
-      "key": "poll_frequency",
-      "type": "number",
-      "label": { "en": "Refresh interval (s)", "fr": "Intervalle de rafraîchissement (s)" },
+      "key": "language",
+      "type": "select",
+      "label": {
+        "en": "Language of the names",
+        "fr": "Langue des noms",
+        "de": "Sprache der Namen",
+        "es": "Idioma de los nombres"
+      },
       "description": {
-        "en": "How often sensors are polled, in seconds (one minute minimum).",
-        "fr": "Fréquence d'interrogation des capteurs, en secondes (une minute minimum)."
+        "en": "Language of the feature names (set when the device is added) and of the scene action errors.",
+        "fr": "Langue des noms des fonctionnalités (fixés à l'ajout de l'appareil) et des erreurs des actions de scène.",
+        "de": "Sprache der Funktionsnamen (beim Anlegen des Geräts festgelegt) und der Fehler der Szenen-Aktionen.",
+        "es": "Idioma de los nombres de las funciones (fijados al añadir el dispositivo) y de los errores de las acciones de escena."
       },
       "required": false,
-      "default": 300,
-      "min": 60,
-      "max": 3600
+      "default": "fr",
+      "options": [
+        {
+          "value": "en",
+          "label": {
+            "en": "English",
+            "fr": "Anglais",
+            "de": "Englisch",
+            "es": "Inglés"
+          }
+        },
+        {
+          "value": "fr",
+          "label": {
+            "en": "French",
+            "fr": "Français",
+            "de": "Französisch",
+            "es": "Francés"
+          }
+        },
+        {
+          "value": "de",
+          "label": {
+            "en": "German",
+            "fr": "Allemand",
+            "de": "Deutsch",
+            "es": "Alemán"
+          }
+        },
+        {
+          "value": "es",
+          "label": {
+            "en": "Spanish",
+            "fr": "Espagnol",
+            "de": "Spanisch",
+            "es": "Español"
+          }
+        }
+      ]
     }
   ],
   "actions": [
     {
-      "key": "test_weather",
-      "label": { "en": "Test the weather provider", "fr": "Tester le fournisseur météo" },
-      "timeout_seconds": 30
-    },
-    {
-      "key": "identify",
-      "label": { "en": "Identify a device", "fr": "Identifier un appareil" },
-      "fields": [
-        {
-          "key": "device",
-          "type": "select",
-          "source": "devices",
-          "label": { "en": "Device", "fr": "Appareil" },
-          "required": true
-        }
-      ]
+      "key": "test_connection",
+      "label": {
+        "en": "Test the connection",
+        "fr": "Tester la connexion",
+        "de": "Verbindung testen",
+        "es": "Probar la conexión"
+      },
+      "timeout_seconds": 60
     }
   ],
   "scene_triggers": [
     {
-      "key": "motion_detected",
-      "label": { "en": "Motion detected", "fr": "Mouvement détecté" },
+      "key": "click_milestone",
+      "label": {
+        "en": "Click milestone",
+        "fr": "Palier de clics",
+        "de": "Klick-Meilenstein",
+        "es": "Hito de clics"
+      },
       "description": {
-        "en": "A demo motion sensor saw a person or an animal move.",
-        "fr": "Un détecteur de démonstration a vu bouger une personne ou un animal."
+        "en": "A followed short link passes a round number of clicks: 10, 25, 50, 100, 250, 500, 1,000…",
+        "fr": "Un lien court suivi passe un nombre rond de clics : 10, 25, 50, 100, 250, 500, 1 000…",
+        "de": "Ein verfolgter Kurzlink überschreitet eine runde Klickzahl: 10, 25, 50, 100, 250, 500, 1.000 …",
+        "es": "Un enlace corto seguido supera un número redondo de clics: 10, 25, 50, 100, 250, 500, 1000…"
       },
       "fields": [
         {
-          "key": "device",
-          "type": "select",
-          "source": "devices",
-          "label": { "en": "Sensor", "fr": "Détecteur" }
+          "key": "keyword",
+          "type": "string",
+          "label": {
+            "en": "Keyword (empty: any followed link)",
+            "fr": "Mot-clé (vide : tout lien suivi)",
+            "de": "Schlüsselwort (leer: jeder verfolgte Link)",
+            "es": "Palabra clave (vacío: cualquier enlace seguido)"
+          }
         },
         {
-          "key": "target",
-          "type": "multi_select",
-          "label": { "en": "What moved", "fr": "Ce qui a bougé" },
+          "key": "milestone",
+          "type": "select",
+          "label": {
+            "en": "Milestone (empty: any)",
+            "fr": "Palier (vide : tous)",
+            "de": "Meilenstein (leer: alle)",
+            "es": "Hito (vacío: todos)"
+          },
           "options": [
-            { "value": "person", "label": { "en": "Person", "fr": "Personne" } },
-            { "value": "animal", "label": { "en": "Animal", "fr": "Animal" } }
+            {
+              "value": "10",
+              "label": {
+                "en": "10",
+                "fr": "10",
+                "de": "10",
+                "es": "10"
+              }
+            },
+            {
+              "value": "25",
+              "label": {
+                "en": "25",
+                "fr": "25",
+                "de": "25",
+                "es": "25"
+              }
+            },
+            {
+              "value": "50",
+              "label": {
+                "en": "50",
+                "fr": "50",
+                "de": "50",
+                "es": "50"
+              }
+            },
+            {
+              "value": "100",
+              "label": {
+                "en": "100",
+                "fr": "100",
+                "de": "100",
+                "es": "100"
+              }
+            },
+            {
+              "value": "250",
+              "label": {
+                "en": "250",
+                "fr": "250",
+                "de": "250",
+                "es": "250"
+              }
+            },
+            {
+              "value": "500",
+              "label": {
+                "en": "500",
+                "fr": "500",
+                "de": "500",
+                "es": "500"
+              }
+            },
+            {
+              "value": "1000",
+              "label": {
+                "en": "1,000",
+                "fr": "1 000",
+                "de": "1.000",
+                "es": "1.000"
+              }
+            },
+            {
+              "value": "2500",
+              "label": {
+                "en": "2,500",
+                "fr": "2 500",
+                "de": "2.500",
+                "es": "2.500"
+              }
+            },
+            {
+              "value": "5000",
+              "label": {
+                "en": "5,000",
+                "fr": "5 000",
+                "de": "5.000",
+                "es": "5.000"
+              }
+            },
+            {
+              "value": "10000",
+              "label": {
+                "en": "10,000",
+                "fr": "10 000",
+                "de": "10.000",
+                "es": "10.000"
+              }
+            },
+            {
+              "value": "25000",
+              "label": {
+                "en": "25,000",
+                "fr": "25 000",
+                "de": "25.000",
+                "es": "25.000"
+              }
+            },
+            {
+              "value": "50000",
+              "label": {
+                "en": "50,000",
+                "fr": "50 000",
+                "de": "50.000",
+                "es": "50.000"
+              }
+            },
+            {
+              "value": "100000",
+              "label": {
+                "en": "100,000",
+                "fr": "100 000",
+                "de": "100.000",
+                "es": "100.000"
+              }
+            },
+            {
+              "value": "250000",
+              "label": {
+                "en": "250,000",
+                "fr": "250 000",
+                "de": "250.000",
+                "es": "250.000"
+              }
+            },
+            {
+              "value": "500000",
+              "label": {
+                "en": "500,000",
+                "fr": "500 000",
+                "de": "500.000",
+                "es": "500.000"
+              }
+            },
+            {
+              "value": "1000000",
+              "label": {
+                "en": "1,000,000",
+                "fr": "1 000 000",
+                "de": "1.000.000",
+                "es": "1.000.000"
+              }
+            }
           ]
         }
       ],
       "variables": [
         {
-          "key": "target",
+          "key": "keyword",
           "type": "string",
-          "label": { "en": "What moved", "fr": "Ce qui a bougé" }
+          "label": {
+            "en": "Keyword",
+            "fr": "Mot-clé",
+            "de": "Schlüsselwort",
+            "es": "Palabra clave"
+          }
+        },
+        {
+          "key": "short_url",
+          "type": "string",
+          "label": {
+            "en": "Short address",
+            "fr": "Adresse courte",
+            "de": "Kurzadresse",
+            "es": "Dirección corta"
+          }
+        },
+        {
+          "key": "long_url",
+          "type": "string",
+          "label": {
+            "en": "Target address",
+            "fr": "Adresse cible",
+            "de": "Zieladresse",
+            "es": "Dirección de destino"
+          }
+        },
+        {
+          "key": "title",
+          "type": "string",
+          "label": {
+            "en": "Title",
+            "fr": "Titre",
+            "de": "Titel",
+            "es": "Título"
+          }
+        },
+        {
+          "key": "clicks",
+          "type": "number",
+          "label": {
+            "en": "Clicks",
+            "fr": "Clics",
+            "de": "Klicks",
+            "es": "Clics"
+          }
+        },
+        {
+          "key": "milestone",
+          "type": "number",
+          "label": {
+            "en": "Milestone",
+            "fr": "Palier",
+            "de": "Meilenstein",
+            "es": "Hito"
+          }
         }
       ]
     }
   ],
   "scene_actions": [
     {
-      "key": "identify_device",
-      "label": { "en": "Identify a device", "fr": "Identifier un appareil" },
-      "description": {
-        "en": "Make a device signal itself (the demo light blinks).",
-        "fr": "Fait se signaler un appareil (la lampe de démonstration clignote)."
+      "key": "shorten_url",
+      "label": {
+        "en": "Shorten an address",
+        "fr": "Raccourcir une adresse",
+        "de": "Adresse kürzen",
+        "es": "Acortar una dirección"
       },
-      "timeout_seconds": 15,
+      "description": {
+        "en": "Creates a short link in YOURLS and gives it to the next actions. An address already shortened gives its link.",
+        "fr": "Crée un lien court dans YOURLS et le donne aux actions suivantes. Une adresse déjà raccourcie donne son lien.",
+        "de": "Erstellt einen Kurzlink in YOURLS und gibt ihn an die nächsten Aktionen weiter. Eine schon gekürzte Adresse liefert ihren Link.",
+        "es": "Crea un enlace corto en YOURLS y lo pasa a las siguientes acciones. Una dirección ya acortada devuelve su enlace."
+      },
+      "timeout_seconds": 30,
       "fields": [
         {
-          "key": "device",
-          "type": "select",
-          "source": "devices",
-          "label": { "en": "Device", "fr": "Appareil" },
+          "key": "url",
+          "type": "string",
+          "label": {
+            "en": "Address to shorten",
+            "fr": "Adresse à raccourcir",
+            "de": "Zu kürzende Adresse",
+            "es": "Dirección que acortar"
+          },
+          "required": true
+        },
+        {
+          "key": "keyword",
+          "type": "string",
+          "label": {
+            "en": "Keyword (optional)",
+            "fr": "Mot-clé (facultatif)",
+            "de": "Schlüsselwort (optional)",
+            "es": "Palabra clave (opcional)"
+          }
+        },
+        {
+          "key": "title",
+          "type": "string",
+          "label": {
+            "en": "Title (optional)",
+            "fr": "Titre (facultatif)",
+            "de": "Titel (optional)",
+            "es": "Título (opcional)"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "key": "keyword",
+          "type": "string",
+          "label": {
+            "en": "Keyword",
+            "fr": "Mot-clé",
+            "de": "Schlüsselwort",
+            "es": "Palabra clave"
+          }
+        },
+        {
+          "key": "short_url",
+          "type": "string",
+          "label": {
+            "en": "Short address",
+            "fr": "Adresse courte",
+            "de": "Kurzadresse",
+            "es": "Dirección corta"
+          }
+        },
+        {
+          "key": "long_url",
+          "type": "string",
+          "label": {
+            "en": "Target address",
+            "fr": "Adresse cible",
+            "de": "Zieladresse",
+            "es": "Dirección de destino"
+          }
+        },
+        {
+          "key": "title",
+          "type": "string",
+          "label": {
+            "en": "Title",
+            "fr": "Titre",
+            "de": "Titel",
+            "es": "Título"
+          }
+        },
+        {
+          "key": "clicks",
+          "type": "number",
+          "label": {
+            "en": "Clicks",
+            "fr": "Clics",
+            "de": "Klicks",
+            "es": "Clics"
+          }
+        },
+        {
+          "key": "created",
+          "type": "boolean",
+          "label": {
+            "en": "New link",
+            "fr": "Nouveau lien",
+            "de": "Neuer Link",
+            "es": "Enlace nuevo"
+          }
+        }
+      ]
+    },
+    {
+      "key": "get_link_clicks",
+      "label": {
+        "en": "Read a short link",
+        "fr": "Lire un lien court",
+        "de": "Kurzlink lesen",
+        "es": "Leer un enlace corto"
+      },
+      "description": {
+        "en": "Reads the clicks of a short link by its keyword, for the next actions.",
+        "fr": "Lit les clics d'un lien court d'après son mot-clé, pour les actions suivantes.",
+        "de": "Liest die Klicks eines Kurzlinks anhand seines Schlüsselworts, für die nächsten Aktionen.",
+        "es": "Lee los clics de un enlace corto por su palabra clave, para las siguientes acciones."
+      },
+      "timeout_seconds": 30,
+      "fields": [
+        {
+          "key": "keyword",
+          "type": "string",
+          "label": {
+            "en": "Keyword",
+            "fr": "Mot-clé",
+            "de": "Schlüsselwort",
+            "es": "Palabra clave"
+          },
           "required": true
         }
       ],
       "outputs": [
         {
-          "key": "signalled",
-          "type": "boolean",
-          "label": { "en": "Device signalled", "fr": "Appareil signalé" }
+          "key": "keyword",
+          "type": "string",
+          "label": {
+            "en": "Keyword",
+            "fr": "Mot-clé",
+            "de": "Schlüsselwort",
+            "es": "Palabra clave"
+          }
+        },
+        {
+          "key": "short_url",
+          "type": "string",
+          "label": {
+            "en": "Short address",
+            "fr": "Adresse courte",
+            "de": "Kurzadresse",
+            "es": "Dirección corta"
+          }
+        },
+        {
+          "key": "long_url",
+          "type": "string",
+          "label": {
+            "en": "Target address",
+            "fr": "Adresse cible",
+            "de": "Zieladresse",
+            "es": "Dirección de destino"
+          }
+        },
+        {
+          "key": "title",
+          "type": "string",
+          "label": {
+            "en": "Title",
+            "fr": "Titre",
+            "de": "Titel",
+            "es": "Título"
+          }
+        },
+        {
+          "key": "clicks",
+          "type": "number",
+          "label": {
+            "en": "Clicks",
+            "fr": "Clics",
+            "de": "Klicks",
+            "es": "Clics"
+          }
         }
       ]
     }
   ],
   "widgets": [
     {
-      "key": "demo_status",
-      "label": { "en": "Demo status", "fr": "État de la démo" },
-      "description": {
-        "en": "Live temperature and plug power, plug connection and observed location.",
-        "fr": "Température et puissance en direct, connexion de la prise, position observée."
+      "key": "yourls_top_links",
+      "label": {
+        "en": "YOURLS links",
+        "fr": "Liens YOURLS",
+        "de": "YOURLS-Links",
+        "es": "Enlaces YOURLS"
       },
-      "icon": "activity",
-      "action_timeout_seconds": 15
+      "description": {
+        "en": "The most clicked short links, and the clicks and links in all.",
+        "fr": "Les liens courts les plus cliqués, et les clics et liens au total.",
+        "de": "Die meistgeklickten Kurzlinks, und Klicks und Links insgesamt.",
+        "es": "Los enlaces cortos más visitados, y los clics y enlaces en total."
+      },
+      "icon": "link",
+      "action_timeout_seconds": 30,
+      "settings": [
+        {
+          "key": "rows",
+          "type": "select",
+          "label": {
+            "en": "Links shown",
+            "fr": "Liens affichés",
+            "de": "Angezeigte Links",
+            "es": "Enlaces mostrados"
+          },
+          "required": false,
+          "default": "10",
+          "options": [
+            {
+              "value": "5",
+              "label": {
+                "en": "5",
+                "fr": "5",
+                "de": "5",
+                "es": "5"
+              }
+            },
+            {
+              "value": "10",
+              "label": {
+                "en": "10",
+                "fr": "10",
+                "de": "10",
+                "es": "10"
+              }
+            }
+          ]
+        },
+        {
+          "key": "show_totals",
+          "type": "boolean",
+          "label": {
+            "en": "Show the totals",
+            "fr": "Afficher les totaux",
+            "de": "Summen anzeigen",
+            "es": "Mostrar los totales"
+          },
+          "required": false,
+          "default": true
+        },
+        {
+          "key": "show_refresh",
+          "type": "boolean",
+          "label": {
+            "en": "Show the Refresh button",
+            "fr": "Afficher le bouton Actualiser",
+            "de": "Schaltfläche Aktualisieren anzeigen",
+            "es": "Mostrar el botón Actualizar"
+          },
+          "required": false,
+          "default": true
+        }
+      ]
     }
   ]
 }

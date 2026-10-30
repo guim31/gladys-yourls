@@ -1,8 +1,8 @@
 {
-  "name": "gladys-integration-template-js",
+  "name": "gladys-yourls",
   "version": "1.0.0",
   "private": true,
-  "description": "Official starter template to build an external integration for Gladys Assistant with the JavaScript SDK.",
+  "description": "YOURLS short links in Gladys Assistant: clicks as sensors, milestone trigger, shorten action, widget.",
   "type": "module",
   "main": "index.js",
   "scripts": {

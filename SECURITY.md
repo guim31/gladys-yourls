@@ -30,6 +30,19 @@ Gladys before reporting a problem.
 
 In scope: the code of this repository and the Docker image it publishes.
 
+What the integration handles:
+
+- the **signature token**, or the **username and password**, of YOURLS, stored
+  by Gladys in the integration configuration (never written to `/data`, never
+  logged); they travel in the body of POST requests to the address configured
+  only, never in an address, and redirects are not followed so they never reach
+  another host;
+- `/data/yourls-state.json`: the clicks last seen per followed link, for the
+  milestone trigger (no secret, no visitor data);
+- network: HTTP(S) requests to YOURLS, nothing else; no port is opened. The
+  scene action "Shorten an address" creates links in YOURLS with the rights of
+  the configured account.
+
 Out of scope: Gladys Assistant itself (see its
 [security policy](https://github.com/GladysAssistant/Gladys/security/policy)),
-and the third-party services and devices the integration talks to.
+and YOURLS itself.
