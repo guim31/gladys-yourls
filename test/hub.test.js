@@ -186,6 +186,40 @@ test('click milestone: another YOURLS address, even set while stopped, starts ov
   assert.equal(milestones(third).length, 0, 'nothing announced');
 });
 
+test('click milestone: a read overlapping a change of the followed links fires once', async (t) => {
+  const world = await createWorld();
+  t.after(() => world.app.stop());
+  world.yourls.click('news', 50);
+  let release;
+  world.yourls.gate = new Promise((resolve) => {
+    release = resolve;
+  });
+  world.clock.advance(300_000);
+  const timerRead = world.hub.pollNow();
+  const edit = world.fake.configUpdated({
+    url: BASE,
+    signature: SIGNATURE,
+    keywords: 'news, docs',
+    language: 'en',
+  });
+  world.yourls.gate = null;
+  release();
+  await Promise.all([timerRead, edit]);
+  assert.deepEqual(
+    milestones(world).map((e) => e.data.milestone),
+    [10, 25, 50],
+  );
+});
+
+test('"Test the connection" reports a failed read at once', async (t) => {
+  const world = await createWorld();
+  t.after(() => world.app.stop());
+  world.yourls.down = true;
+  const ack = await world.fake.action('test_connection');
+  assert.equal(ack.data.message.en, 'YOURLS does not answer');
+  assert.deepEqual(world.fake.connectionStatus, { connected: true }, 'not an outage yet');
+});
+
 test('a keyword not found: no state for it, the rest goes on, the report says it', async (t) => {
   const world = await createWorld({
     config: { url: BASE, signature: SIGNATURE, keywords: 'news, nope', language: 'en' },

@@ -21,6 +21,7 @@ export class FakeYourls {
     this.down = false;
     this.html = false;
     this.redirect = false;
+    this.gate = null;
     /** @type {object[]} the forms received, in order */
     this.requests = [];
     this.request = this.request.bind(this);
@@ -40,6 +41,8 @@ export class FakeYourls {
 
   async request(url, { form }) {
     this.requests.push(form);
+    // A promise to hold the answers on (slow server, overlapping reads).
+    await this.gate;
     if (this.down) {
       const err = new TypeError('fetch failed');
       err.cause = { code: 'ECONNREFUSED' };

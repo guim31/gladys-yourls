@@ -119,6 +119,8 @@ export class YourlsHub {
     this.failures = 0;
     this.reachable = null;
     this.polling = null;
+    // Bumped when a read in flight becomes outdated: its result is dropped.
+    this.generation = 0;
     this.transport = null;
     this.connection = null;
     this.discovered = null;
@@ -166,10 +168,14 @@ export class YourlsHub {
       config.password,
     ]);
     let dirty = false;
-    if (this.saved.url !== config.url) {
-      // Another YOURLS (changed now, or while the integration was stopped):
-      // its links are not the ones remembered.
-      this.saved = { url: config.url, clicks: Object.create(null) };
+    // An address being typed (empty, or not understood yet) changes nothing.
+    if (config.url && this.saved.url !== config.url) {
+      if (this.saved.url) {
+        // Another YOURLS (changed now, or while the integration was stopped):
+        // its links are not the ones remembered.
+        this.saved.clicks = Object.create(null);
+      }
+      this.saved.url = config.url;
       dirty = true;
     }
     const keywordsChanged = JSON.stringify(previous.keywords) !== JSON.stringify(config.keywords);
@@ -193,6 +199,7 @@ export class YourlsHub {
       this.failures = 0;
       this.reachable = null;
       this.polling = null;
+      this.generation += 1;
       this.transport = null;
     }
     // A link no longer followed is forgotten: followed again, it starts
@@ -207,8 +214,10 @@ export class YourlsHub {
       this.store.save(this.saved);
     }
     if (keywordsChanged) {
-      // A read in flight asks for the previous links: read again.
+      // A read in flight asks for the previous links: read again, and drop
+      // its result (it would fire the same milestones as the new read).
       this.polling = null;
+      this.generation += 1;
     }
     try {
       if (this.client) {
@@ -267,7 +276,7 @@ export class YourlsHub {
       return Promise.resolve(false);
     }
     if (!this.polling) {
-      const polling = this.read(this.client).finally(() => {
+      const polling = this.read(this.client, this.generation).finally(() => {
         // A read of a previous client must not drop the promise of the current one.
         if (this.polling === polling) {
           this.polling = null;
@@ -278,7 +287,7 @@ export class YourlsHub {
     return this.polling;
   }
 
-  async read(client) {
+  async read(client, generation) {
     let result;
     try {
       result = await this.readServer(client);
@@ -286,9 +295,9 @@ export class YourlsHub {
       if (!(err instanceof YourlsError)) {
         throw err;
       }
-      return client === this.client && this.applyFailure(err);
+      return generation === this.generation && this.applyFailure(err);
     }
-    return client === this.client && this.applySuccess(result);
+    return generation === this.generation && this.applySuccess(result);
   }
 
   /** The version (once), the totals and the top, and each followed link. */
@@ -581,7 +590,10 @@ export class YourlsHub {
   async testConnection() {
     await this.pollNow({ publish: true });
     const message = {};
-    const status = this.connectionStatus();
+    // After a failed read, even one not counted as an outage yet: say it.
+    const status = this.error
+      ? { connected: false, message: ERROR_TEXT[this.error.kind] }
+      : this.connectionStatus();
     const missing = [...this.followed].filter(([, link]) => !link).map(([keyword]) => keyword);
     for (const [language, text] of Object.entries(REPORT_TEXT)) {
       if (!status.connected) {
