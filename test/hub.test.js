@@ -13,6 +13,7 @@ import {
   SIGNATURE,
   createDevices,
   createWorld,
+  FakeYourls,
   idsOf,
   linkFeature,
   sampleYourls,
@@ -131,6 +132,60 @@ test('click milestone: kept across a restart, forgotten for a link no longer fol
   assert.equal(milestones(second).length, 1);
 });
 
+test('click milestone: one Gladys refused is fired again at the next read', async (t) => {
+  const world = await createWorld();
+  t.after(() => world.app.stop());
+  const publish = world.gladys.publishSceneEvent.bind(world.gladys);
+  let refuse = true;
+  world.gladys.publishSceneEvent = async (key, data) => {
+    if (refuse && data.milestone === 25) {
+      throw new Error('429 Too Many Requests');
+    }
+    return publish(key, data);
+  };
+  world.yourls.click('news', 50); // 8 -> 58: 10, then 25 refused
+  await tick(world);
+  assert.deepEqual(
+    milestones(world).map((e) => e.data.milestone),
+    [10],
+  );
+  refuse = false;
+  await tick(world);
+  assert.deepEqual(
+    milestones(world).map((e) => e.data.milestone),
+    [10, 25, 50],
+  );
+  await tick(world);
+  assert.equal(milestones(world).length, 3);
+});
+
+test('click milestone: another YOURLS address, even set while stopped, starts over', async (t) => {
+  const yourls = sampleYourls();
+  const first = await createWorld({ yourls });
+  await first.app.stop();
+  yourls.click('news', 50);
+  const second = await createWorld({
+    yourls,
+    dataDir: first.dataDir,
+    config: { url: `${BASE}/`, signature: SIGNATURE, keywords: 'news' },
+  });
+  t.after(() => second.app.stop());
+  // `https://sho.rt/` is the same address once normalized: kept.
+  assert.equal(milestones(second).length, 3);
+  await second.app.stop();
+  // Another YOURLS, whose `news` has far more clicks than the one remembered.
+  const other = new FakeYourls({ base: 'https://go.example.test' });
+  other.addLink({ keyword: 'news', clicks: 500 });
+  const third = await createWorld({
+    yourls: other,
+    dataDir: first.dataDir,
+    config: { url: 'go.example.test', signature: SIGNATURE, keywords: 'news' },
+  });
+  t.after(() => third.app.stop());
+  assert.deepEqual(third.fake.connectionStatus, { connected: true });
+  assert.equal(milestones(third).length, 0, 'nothing announced');
+});
+
 test('a keyword not found: no state for it, the rest goes on, the report says it', async (t) => {
   const world = await createWorld({
     config: { url: BASE, signature: SIGNATURE, keywords: 'news, nope', language: 'en' },
@@ -156,11 +211,13 @@ test('an outage: unreachable after two failed reads, back after one', async (t) 
   world.yourls.down = true;
   await tick(world);
   assert.equal(stateOf(world, reachable).state, 1, 'one lost answer is not an outage');
+  assert.deepEqual(world.fake.connectionStatus, { connected: true });
+  assert.equal(world.fake.transports.at(-1).transport, 'cloud');
+  await tick(world);
+  assert.equal(stateOf(world, reachable).state, 0);
   assert.equal(world.fake.connectionStatus.connected, false);
   assert.equal(world.fake.connectionStatus.message.fr, 'YOURLS ne répond pas');
   assert.equal(world.fake.transports.at(-1).transport, 'unreachable');
-  await tick(world);
-  assert.equal(stateOf(world, reachable).state, 0);
   world.yourls.down = false;
   await tick(world);
   assert.equal(stateOf(world, reachable).state, 1);

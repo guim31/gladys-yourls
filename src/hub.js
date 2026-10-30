@@ -123,7 +123,7 @@ export class YourlsHub {
     this.connection = null;
     this.discovered = null;
     this.widgetSignature = null;
-    this.saved = { clicks: {} };
+    this.saved = { url: null, clicks: Object.create(null) };
     this.pollTimer = null;
     this.stopped = false;
     // What fails again at every cycle (Gladys refusing, the reading loop, a
@@ -136,7 +136,14 @@ export class YourlsHub {
   async start(config) {
     const saved = await this.store.load();
     const clicks = saved?.clicks;
-    this.saved = { clicks: clicks && typeof clicks === 'object' ? { ...clicks } : {} };
+    // Without a prototype: a keyword such as `__proto__` stays a plain key.
+    this.saved = {
+      url: typeof saved?.url === 'string' ? saved.url : null,
+      clicks: Object.assign(
+        Object.create(null),
+        clicks && typeof clicks === 'object' ? clicks : {},
+      ),
+    };
     await this.reconfigure(config);
   }
 
@@ -158,10 +165,14 @@ export class YourlsHub {
       config.username,
       config.password,
     ]);
-    if (this.signature !== null && previous.url !== config.url) {
-      // Another YOURLS: its links are not the ones remembered.
-      this.saved.clicks = {};
+    let dirty = false;
+    if (this.saved.url !== config.url) {
+      // Another YOURLS (changed now, or while the integration was stopped):
+      // its links are not the ones remembered.
+      this.saved = { url: config.url, clicks: Object.create(null) };
+      dirty = true;
     }
+    const keywordsChanged = JSON.stringify(previous.keywords) !== JSON.stringify(config.keywords);
     if (signature !== this.signature) {
       this.signature = signature;
       this.client =
@@ -189,7 +200,15 @@ export class YourlsHub {
     for (const keyword of Object.keys(this.saved.clicks)) {
       if (!config.keywords.includes(keyword)) {
         delete this.saved.clicks[keyword];
+        dirty = true;
       }
+    }
+    if (dirty) {
+      this.store.save(this.saved);
+    }
+    if (keywordsChanged) {
+      // A read in flight asks for the previous links: read again.
+      this.polling = null;
     }
     try {
       if (this.client) {
@@ -296,6 +315,7 @@ export class YourlsHub {
 
   async applySuccess({ version, server, followed }) {
     const firstRead = this.readAt === 0;
+    const recovered = this.error !== null;
     if (this.error) {
       logger.info('YOURLS answers again');
     }
@@ -313,12 +333,14 @@ export class YourlsHub {
     this.reachable = true;
     this.readAt = this.now();
     const signature = JSON.stringify(server);
-    const widgetChanged = signature !== this.widgetSignature;
+    // After an error, the widget shows its message until it is refreshed.
+    const widgetChanged = recovered || signature !== this.widgetSignature;
     this.widgetSignature = signature;
 
     let dirty = false;
     for (const [keyword, link] of followed) {
-      if (link) {
+      // A read started before a change of the links to follow.
+      if (link && this.config.keywords.includes(keyword)) {
         dirty = (await this.announceMilestones(keyword, link)) || dirty;
       }
     }
@@ -359,13 +381,16 @@ export class YourlsHub {
     if (before === link.clicks) {
       return false;
     }
-    this.saved.clicks[keyword] = link.clicks;
     if (!Number.isFinite(before) || link.clicks < before) {
+      this.saved.clicks[keyword] = link.clicks;
       return true;
     }
+    // Recorded up to the last milestone Gladys accepted: one it refused (Gladys
+    // restarting, its rate limit) is fired again at the next read.
+    let recorded = link.clicks;
     for (const milestone of passedMilestones(before, link.clicks)) {
       logger.info(`Short link "${keyword}" passed ${milestone} clicks`);
-      await this.fire(TRIGGERS.MILESTONE, {
+      const fired = await this.fire(TRIGGERS.MILESTONE, {
         keyword,
         milestone,
         clicks: link.clicks,
@@ -373,15 +398,24 @@ export class YourlsHub {
         long_url: link.longUrl,
         title: link.title,
       });
+      if (!fired) {
+        recorded = milestone - 1;
+        break;
+      }
     }
-    return true;
+    this.saved.clicks[keyword] = recorded;
+    return recorded !== before;
   }
 
+  /** @returns {Promise<boolean>} whether Gladys accepted the event */
   async fire(key, data) {
     try {
       await this.gladys.publishSceneEvent(key, data);
+      this.problems.recover('scene event', 'Scene events accepted again');
+      return true;
     } catch (err) {
-      logger.warn(`Scene event ${key} refused: ${err.message}`);
+      this.problems.fail('scene event', `Scene event ${key} refused: ${err.message}`);
+      return false;
     }
   }
 
@@ -474,7 +508,7 @@ export class YourlsHub {
     if (!this.client || this.readAt === 0 || !this.isCreated()) {
       return;
     }
-    const transport = this.error ? DEVICE_TRANSPORTS.UNREACHABLE : transportOf(this.config.url);
+    const transport = this.isOut() ? DEVICE_TRANSPORTS.UNREACHABLE : transportOf(this.config.url);
     if (transport === this.transport) {
       return;
     }
@@ -495,10 +529,27 @@ export class YourlsHub {
     if (missing) {
       return { connected: false, message: CONNECTION_TEXT[missing] };
     }
-    if (this.error) {
+    if (this.isOut()) {
       return { connected: false, message: ERROR_TEXT[this.error.kind] };
     }
     return { connected: true };
+  }
+
+  /**
+   * Whether the last error counts: at once for a configuration to fix (token
+   * refused, redirect) or before any successful read; after FAILURES_FOR_DOWN
+   * failed reads in a row for YOURLS not answering (one lost answer is not
+   * an outage).
+   */
+  isOut() {
+    if (!this.error) {
+      return false;
+    }
+    return (
+      !DOWN_KINDS.has(this.error.kind) ||
+      this.reachable !== true ||
+      this.failures >= FAILURES_FOR_DOWN
+    );
   }
 
   async publishConnectionStatus() {

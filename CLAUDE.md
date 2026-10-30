@@ -243,7 +243,9 @@ code de ce dépôt. Compléter ce fichier quand un nouveau piège est découvert
   joignable : tester depuis un conteneur du même réseau.
 - Le déclencheur « Palier de clics » remplace un seuil (que les filtres de scène ne savent pas faire)
   par une **échelle fixe** 10, 25, 50, 100… 1 000 000 en filtre `select` : un palier par événement,
-  tous ceux franchis entre deux lectures, mémorisés dans `/data` par mot-clé.
+  tous ceux franchis entre deux lectures, mémorisés dans `/data` par mot-clé (avec l'adresse : une
+  autre instance repart de zéro, même changée conteneur arrêté). Un palier refusé par Gladys (redémarrage,
+  limite de débit) est rejoué à la lecture suivante.
 
 ## Store
 

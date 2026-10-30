@@ -11,8 +11,9 @@ export const SIGNATURE = '0123456789abcdef0123456789abcdef';
 const json = (status, body) => ({ status, body: JSON.stringify(body) });
 
 export class FakeYourls {
-  constructor({ version = '1.10.6' } = {}) {
+  constructor({ version = '1.10.6', base = BASE } = {}) {
     this.version = version;
+    this.base = base;
     /** @type {Map<string, { keyword, url, title, clicks }>} */
     this.links = new Map();
     this.next = 1;
@@ -34,7 +35,7 @@ export class FakeYourls {
   }
 
   short(link) {
-    return `${BASE}/${link.keyword}`;
+    return `${this.base}/${link.keyword}`;
   }
 
   async request(url, { form }) {
@@ -47,7 +48,7 @@ export class FakeYourls {
     if (this.redirect) {
       return { status: 301, body: '' };
     }
-    if (this.html || url !== `${BASE}/yourls-api.php`) {
+    if (this.html || url !== `${this.base}/yourls-api.php`) {
       return { status: 404, body: '<html><body>Not Found</body></html>' };
     }
     if (form.format !== 'json') {

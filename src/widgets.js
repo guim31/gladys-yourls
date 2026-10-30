@@ -142,6 +142,9 @@ async function action(hub, { actionKey }) {
   if (actionKey !== ACTIONS.REFRESH) {
     throw new Error(`Unknown action ${actionKey}`);
   }
+  if (!hub.client) {
+    return { message: TEXT.pick };
+  }
   await hub.pollNow();
   if (hub.error) {
     return { message: ERROR_TEXT[hub.error.kind] };

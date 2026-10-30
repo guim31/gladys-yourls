@@ -212,7 +212,8 @@ export class YourlsClient {
       throw new YourlsError(ERROR_KINDS.NOT_FOUND, `No short link "${keyword}"`, { status });
     }
     const link = status === 200 ? normalizeLink({ keyword, ...data.link }) : null;
-    if (!link) {
+    // Without a count, 0 would read as a reset and replay the milestones.
+    if (!link || !Number.isFinite(Number(data.link?.clicks))) {
       throw new YourlsError(ERROR_KINDS.HTTP, `Unexpected url-stats answer (${status})`, {
         status,
       });
